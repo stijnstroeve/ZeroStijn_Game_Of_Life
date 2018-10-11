@@ -11,52 +11,31 @@ class Canvas {
         this.gridHeight = Math.floor(this.canvas.height / this.gridSpace);
     }
     getNeighbours(x, y) {
-        let neighbours = [];
-        if(this.inBounds(x - 1, y - 1)) {
-            neighbours.push(this.grid[y - 1][x - 1]);
-        }
-        if(this.inBounds(x, y - 1)) {
-            neighbours.push(this.grid[y - 1][x]);
-        }
-        if(this.inBounds(x + 1, y - 1)) {
-            neighbours.push(this.grid[y - 1][x + 1]);
-        }
-        if(this.inBounds(x - 1, y)) {
-            neighbours.push(this.grid[y][x - 1]);
-        }
-        if(this.inBounds(x + 1, y)) {
-            neighbours.push(this.grid[y][x + 1]);
-        }
-        if(this.inBounds(x - 1, y + 1)) {
-            neighbours.push(this.grid[y + 1][x - 1]);
-        }
-        if(this.inBounds(x, y + 1)) {
-            neighbours.push(this.grid[y + 1][x]);
-        }
-        if(this.inBounds(x + 1, y + 1)) {
-            neighbours.push(this.grid[y + 1][x + 1]);
-        }
-
-        return neighbours;
-    }
-    inBounds(x, y) {
-        let inBound = true;
-        if(x < 0 || x > this.gridWidth - 1) {
-            inBound = false;
-        }
-        if(y < 0 || y > this.gridHeight - 1) {
-            inBound = false;
-        }
-        return inBound;
-    }
-    getAlive(neighbours) {
-        let alive = [];
-        for(let i = 0; i < neighbours.length; i++) {
-            if(neighbours[i] === 1) {
-                alive.push(neighbours[i]);
-            }
-        }
+        let alive = 0;
+        alive = this.getCell(x - 1, y - 1) === 1 ? alive + 1 : alive;
+        alive = this.getCell(x, y - 1) === 1 ? alive + 1 : alive;
+        alive = this.getCell(x + 1, y - 1) === 1 ? alive + 1 : alive;
+        alive = this.getCell(x - 1, y) === 1 ? alive + 1 : alive;
+        alive = this.getCell(x + 1, y) === 1 ? alive + 1 : alive;
+        alive = this.getCell(x - 1, y + 1) === 1 ? alive + 1 : alive;
+        alive = this.getCell(x, y + 1) === 1 ? alive + 1 : alive;
+        alive = this.getCell(x + 1, y + 1) === 1 ? alive + 1 : alive;
         return alive;
+    }
+    getCell(x, y) {
+        if(x > this.gridWidth - 1) {
+            x = x - this.gridWidth;
+        }
+        if(y > this.gridHeight - 1) {
+            y = y - this.gridHeight;
+        }
+        if(x < 0) {
+            x = this.gridWidth - 1;
+        }
+        if(y < 0) {
+            y = this.gridHeight - 1;
+        }
+        return this.grid[y][x];
     }
     nextGeneration() {
         this.next = this.newEmptyGrid();
@@ -64,21 +43,18 @@ class Canvas {
             for(let x = 0; x < this.gridWidth; x++) {
                 let alive = this.grid[y][x] === 1;
                 let neighbours = this.getNeighbours(x, y);
-                let aliveNeighbours = this.getAlive(neighbours);
 
-                if((aliveNeighbours.length === 2 || aliveNeighbours.length === 3) && alive) {
+                if((neighbours === 2 || neighbours === 3) && alive) {
                     this.next[y][x] = 1;
                 }
-                if(aliveNeighbours.length === 3 && !alive) {
+                if(neighbours === 3 && !alive) {
                     this.next[y][x] = 1;
                 }
-                if((aliveNeighbours.length < 2 || aliveNeighbours.length > 3) && alive) {
-                    console.log("huh");
+                if((neighbours < 2 || neighbours > 3) && alive) {
                     this.next[y][x] = 0;
                 }
             }
         }
-        console.log(this.next);
         this.grid = this.next;
     }
     newEmptyGrid() {
@@ -92,14 +68,12 @@ class Canvas {
         return empty;
     }
     setup() {
-        for(let y = 0; y < this.gridHeight; y++) {
-            this.grid.push([]);
-            this.next.push([]);
-            for(let x = 0; x < this.gridWidth; x++) {
-                this.grid[y][x] = 0;
-                this.next[y][x] = 0;
-            }
-        }
+        this.grid = this.newEmptyGrid();
+
+        setInterval(() => {
+            this.nextGeneration();
+            this.draw();
+        }, 50)
     }
     draw() {
         for(let y = 0; y < this.gridHeight; y++) {
@@ -111,15 +85,8 @@ class Canvas {
     }
 }
 
-let canvas;
-
-function next() {
-    canvas.nextGeneration();
-    canvas.draw();
-}
-
 document.addEventListener("DOMContentLoaded", function() {
-    canvas = new Canvas(document.getElementById("canvas"));
+    let canvas = new Canvas(document.getElementById("canvas"));
     canvas.setup();
     canvas.grid[3][3] = 1;
     canvas.grid[4][4] = 1;
