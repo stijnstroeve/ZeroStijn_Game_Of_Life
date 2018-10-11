@@ -4,6 +4,9 @@ class Canvas {
         this.canvas = canvas;
         this.ctx = this.canvas.getContext("2d");
 
+        this.interval = null;
+        this.started = false;
+
         this.next = [];
         this.grid = [];
         this.gridSpace = 10;
@@ -69,11 +72,17 @@ class Canvas {
     }
     setup() {
         this.grid = this.newEmptyGrid();
-
-        setInterval(() => {
+    }
+    start() {
+        this.started = true;
+        this.interval = setInterval(() => {
             this.nextGeneration();
             this.draw();
-        }, 50)
+        }, 50);
+    }
+    stop() {
+        this.started = false;
+        clearInterval(this.interval);
     }
     draw() {
         for(let y = 0; y < this.gridHeight; y++) {
@@ -83,16 +92,47 @@ class Canvas {
             }
         }
     }
+    drawCell(pos) {
+        if(!this.started) {
+            let x = Math.floor(pos.x / this.gridSpace);
+            let y = Math.floor(pos.y / this.gridSpace);
+
+            this.grid[y][x] = this.grid[y][x] === 0 ? 1 : 0;
+
+            this.draw();
+        }
+    }
 }
 
-document.addEventListener("DOMContentLoaded", function() {
-    let canvas = new Canvas(document.getElementById("canvas"));
-    canvas.setup();
-    canvas.grid[3][3] = 1;
-    canvas.grid[4][4] = 1;
+const getMousePos = (c, e) => {
+    let rect = c.getBoundingClientRect();
+    return {
+        x: e.clientX - rect.left,
+        y: e.clientY - rect.top
+    }
+}
 
-    canvas.grid[5][2] = 1;
-    canvas.grid[5][3] = 1;
-    canvas.grid[5][4] = 1;
-    canvas.draw();
+const pressButton = () => {
+    let button = document.getElementById("button");
+    if(!canvas.started) {
+        canvas.start();
+        button.innerText = "Stop";
+    } else {
+        canvas.stop();
+        button.innerText = "Start";
+    }
+}
+
+let canvas;
+
+document.addEventListener("DOMContentLoaded", () => {
+    let c = document.getElementById("canvas");
+
+    canvas = new Canvas(c);
+    canvas.setup();
+
+    c.addEventListener('click', (e) => {
+        let mousePos = getMousePos(c, e);
+        canvas.drawCell(mousePos);
+    }, false);
 });
