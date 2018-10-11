@@ -107,10 +107,20 @@ class Canvas {
             }
         }
     }
-    drawCell(pos) {
+    randomize() {
+        for(let y = 0; y < this.gridHeight; y++) {
+            for(let x = 0; x < this.gridWidth; x++) {
+                let alive = Math.round(Math.random());
+                if(alive) {
+                    this.drawCell({x: x, y: y}, false);
+                }
+            }
+        }
+    }
+    drawCell(pos, isMouse) {
         if(!this.started) {
-            let x = Math.floor(pos.x / this.gridSpace);
-            let y = Math.floor(pos.y / this.gridSpace);
+            let x = isMouse ? Math.floor(pos.x / this.gridSpace) : pos.x;
+            let y = isMouse ? Math.floor(pos.y / this.gridSpace) : pos.y;
 
             this.grid[y][x] = this.grid[y][x] === 0 ? 1 : 0;
 
@@ -118,6 +128,8 @@ class Canvas {
         }
     }
 }
+
+let canvas;
 
 const getMousePos = (c, e) => {
     let rect = c.getBoundingClientRect();
@@ -136,7 +148,9 @@ const pressButton = () => {
     }
 }
 
-let canvas;
+const randomize = () => {
+    canvas.randomize();
+}
 
 document.addEventListener("DOMContentLoaded", () => {
     let c = document.getElementById("canvas");
@@ -148,6 +162,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
     c.addEventListener('click', (e) => {
         let mousePos = getMousePos(c, e);
-        canvas.drawCell(mousePos);
+        canvas.drawCell(mousePos, true);
     }, false);
 });
