@@ -1,10 +1,11 @@
 
 class Canvas {
-    constructor(canvas) {
+    constructor(canvas, button, interval) {
         this.canvas = canvas;
+        this.button = button;
         this.ctx = this.canvas.getContext("2d");
 
-        this.interval = null;
+        this.interval = interval;
         this.started = false;
 
         this.next = [];
@@ -41,6 +42,7 @@ class Canvas {
         return this.grid[y][x];
     }
     nextGeneration() {
+        let noAlive = true;
         this.next = this.newEmptyGrid();
         for(let y = 0; y < this.gridHeight; y++) {
             for(let x = 0; x < this.gridWidth; x++) {
@@ -48,6 +50,7 @@ class Canvas {
                 let neighbours = this.getNeighbours(x, y);
 
                 if((neighbours === 2 || neighbours === 3) && alive) {
+                    noAlive = false;
                     this.next[y][x] = 1;
                 }
                 if(neighbours === 3 && !alive) {
@@ -57,6 +60,9 @@ class Canvas {
                     this.next[y][x] = 0;
                 }
             }
+        }
+        if(noAlive) {
+            this.stop();
         }
         this.grid = this.next;
     }
@@ -73,16 +79,25 @@ class Canvas {
     setup() {
         this.grid = this.newEmptyGrid();
     }
+    loop() {
+        if(this.started) {
+            setTimeout(() => {
+                console.log(this.interval);
+                this.nextGeneration();
+                this.draw();
+
+                this.loop();
+            }, this.interval.value);
+        }
+    }
     start() {
         this.started = true;
-        this.interval = setInterval(() => {
-            this.nextGeneration();
-            this.draw();
-        }, 50);
+        this.button.innerText = "Stop";
+        this.loop();
     }
     stop() {
         this.started = false;
-        clearInterval(this.interval);
+        this.button.innerText = "Start";
     }
     draw() {
         for(let y = 0; y < this.gridHeight; y++) {
@@ -113,13 +128,11 @@ const getMousePos = (c, e) => {
 }
 
 const pressButton = () => {
-    let button = document.getElementById("button");
     if(!canvas.started) {
         canvas.start();
-        button.innerText = "Stop";
+
     } else {
         canvas.stop();
-        button.innerText = "Start";
     }
 }
 
@@ -127,8 +140,10 @@ let canvas;
 
 document.addEventListener("DOMContentLoaded", () => {
     let c = document.getElementById("canvas");
+    let button = document.getElementById("button");
+    let interval = document.getElementById("speed");
 
-    canvas = new Canvas(c);
+    canvas = new Canvas(c, button, interval);
     canvas.setup();
 
     c.addEventListener('click', (e) => {
